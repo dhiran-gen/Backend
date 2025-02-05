@@ -1,0 +1,34 @@
+1. change config -- sudo nano /etc/nginx/sites-available/load-balancer
+
+upstream backend_servers {
+    server 192.168.1.101;  # Replace with your first backend server IP
+    server 192.168.1.102;  # Replace with your second backend server IP
+}
+
+server {
+    listen 80;
+
+    location / {
+        proxy_pass http://backend_servers;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+
+2. sudo nginx -t (test)
+3. restart or reload -- sudo systemctl restart nginx
+4. check log using var
+
+ref - https://youtu.be/v81CzSeiQjo?si=zSeAgjQz4p1ktYzn
+
+Which Load Balancer Should You Choose?
+Load Balancer	    Best For	                    Layer	        Features
+NGINX       	    General-purpose, easy setup	    L4 & L7	        Reverse proxy, caching, SSL
+HAProxy     	    High-performance, low-latency	L4 & L7	        Health checks, sticky sessions
+AWS ELB 	        Cloud-based, auto-scaling	    L4 & L7     	Managed, integrates with AWS
+Apache (mod_proxy)	Simple HTTP balancing	        L7	            Works within Apache
+Traefik	            Microservices, Docker, Kubernetes	L7      	Auto-discovery, SSL
+Envoy	            Cloud-native, service mesh	    L7	            gRPC, HTTP2, observability
+F5 BIG-IP	        Enterprise networking	        L4 & L7	        WAF, security, SSL offloading
+Cloudflare LB   	Global traffic balancing	    L7	            CDN, DDoS protection
