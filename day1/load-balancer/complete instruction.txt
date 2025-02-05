@@ -1,0 +1,127 @@
+Setting up a simple load balancer using **NGINX** involves installing NGINX, configuring it as a reverse proxy, and setting up two backend servers. Follow these step-by-step instructions:
+
+---
+
+## **Step 1: Install NGINX**
+On your **Ubuntu** machine, run the following commands to install NGINX:
+
+```bash
+sudo apt update && sudo apt install nginx -y
+```
+
+After installation, start and enable NGINX:
+
+```bash
+sudo systemctl start nginx
+sudo systemctl enable nginx
+```
+
+---
+
+## **Step 2: Configure NGINX as a Reverse Proxy**
+### Open the NGINX Configuration File:
+```bash
+sudo nano /etc/nginx/sites-available/load-balancer
+```
+
+### Add the following configuration:
+```nginx
+upstream backend_servers {
+    server 192.168.1.101;  # Replace with your first backend server IP
+    server 192.168.1.102;  # Replace with your second backend server IP
+}
+
+server {
+    listen 80;
+
+    location / {
+        proxy_pass http://backend_servers;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+```
+
+### Save and exit the file (**CTRL+X**, then **Y**, then **Enter**).
+
+---
+
+## **Step 3: Enable the Configuration**
+```bash
+sudo ln -s /etc/nginx/sites-available/load-balancer /etc/nginx/sites-enabled/
+```
+
+Remove the default NGINX configuration (optional but recommended):
+```bash
+sudo rm /etc/nginx/sites-enabled/default
+```
+
+---
+
+## **Step 4: Test and Restart NGINX**
+Check if the configuration is valid:
+```bash
+sudo nginx -t
+```
+
+If there are no errors, restart NGINX:
+```bash
+sudo systemctl restart nginx
+```
+
+---
+
+## **Step 5: Set Up Backend Servers**
+On **each backend server** (e.g., `192.168.1.101` and `192.168.1.102`), install a basic web server like **Apache or NGINX**.
+
+For **Apache**:
+```bash
+sudo apt update && sudo apt install apache2 -y
+```
+
+Create an **index.html** file for testing:
+```bash
+echo "<h1>Server 1</h1>" | sudo tee /var/www/html/index.html
+```
+For the second server, change the content:
+```bash
+echo "<h1>Server 2</h1>" | sudo tee /var/www/html/index.html
+```
+
+Restart Apache:
+```bash
+sudo systemctl restart apache2
+```
+
+---
+
+## **Step 6: Test Load Balancing**
+From any machine, open a browser and enter your **load balancer's IP**:
+
+```
+http://<load_balancer_IP>
+```
+
+You should see **Server 1** or **Server 2** randomly appearing as NGINX distributes the load between them.
+
+---
+
+## **Step 7: Optional Enhancements**
+- **Round-Robin Load Balancing** (default, as configured).
+- **Session Persistence (Sticky Sessions)**:  
+  Modify the `upstream` block:
+  ```nginx
+  upstream backend_servers {
+      ip_hash;
+      server 192.168.1.101;
+      server 192.168.1.102;
+  }
+  ```
+- **Health Checks**: Ensure servers are available before forwarding traffic.
+- **SSL/TLS**: Secure your load balancer with an SSL certificate.
+
+---
+
+### ✅ **You have now successfully set up a simple load balancer using NGINX!** 🚀  
+Let me know by raising an issue if you need any modifications or explanations!
